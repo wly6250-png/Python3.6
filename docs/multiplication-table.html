@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>乘法口诀表</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px;
+        }
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .header {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <table id="multiplicationTable"></table>
+    
+    <script>
+        function createMultiplicationTable() {
+            const table = document.getElementById('multiplicationTable');
+            
+            // 创建表头行
+            let headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<td class="header"></td>';
+            for (let i = 1; i <= 9; i++) {
+                headerRow.innerHTML += `<td class="header">${i}</td>`;
+            }
+            table.appendChild(headerRow);
+            
+            // 创建乘法表内容
+            for (let i = 1; i <= 9; i++) {
+                let row = document.createElement('tr');
+                row.innerHTML = `<td class="header">${i}</td>`;
+                
+                for (let j = 1; j <= 9; j++) {
+                    if (j <= i) {
+                        row.innerHTML += `<td>${j} × ${i} = ${i * j}</td>`;
+                    } else {
+                        row.innerHTML += '<td></td>';
+                    }
+                }
+                table.appendChild(row);
+            }
+        }
+        
+        createMultiplicationTable();
+    </script>
+</body>
+</html>
