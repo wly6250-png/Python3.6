@@ -29,6 +29,8 @@ def greeting(name):
 #外部不需要引用的函数全部定义成private，只有外部需要引用的函数才定义为public
 
 import sys
-sys.path.append('C:\ITLMC2017\Python') # 直接修改sys.path，添加要搜索的目录
+from pathlib import Path
+# 将工作区根目录加入搜索路径（替代旧的写死路径 C:\ITLMC2017\Python）
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 print(sys.path) # 种方法是在运行时修改，运行结束后失效
 from .. import module_test

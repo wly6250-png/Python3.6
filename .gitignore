@@ -1,0 +1,17 @@
+# Python 运行时与缓存（本仓库只保留练习源码）
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# 旧绿色运行时残留（已迁出，不纳入版本管理）
+Lib/
+Scripts/
+DLLs/
+libs/
+include/
+tcl/
+*.pyd
+*.dll
+*.exe
+*.zip
