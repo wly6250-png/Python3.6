@@ -1,10 +1,32 @@
 import pygame
-import numpy as np
 import sys
 from pygame.locals import *
 
 # 初始化pygame
 pygame.init()
+
+# 中文字体候选路径（不使用 pygame.font.SysFont：它会扫描注册表，
+# 注册表里有非字符串项时会抛 TypeError）
+FONT_CANDIDATES = [
+    r"C:\Windows\Fonts\msyh.ttc",     # 微软雅黑
+    r"C:\Windows\Fonts\simhei.ttf",   # 黑体
+    r"C:\Windows\Fonts\simsun.ttc",   # 宋体
+    "/System/Library/Fonts/PingFang.ttc",                      # macOS
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",          # Linux
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
+]
+
+
+def load_font(size):
+    """加载支持中文的字体，找不到时退回 pygame 默认字体（中文会显示为方块）"""
+    import os
+    for path in FONT_CANDIDATES:
+        if os.path.exists(path):
+            try:
+                return pygame.font.Font(path, size)
+            except (OSError, pygame.error):
+                continue
+    return pygame.font.Font(None, size)
 
 # 定义常量
 BOARD_SIZE = 15
@@ -35,7 +57,8 @@ class GobangGame:
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("五子棋游戏 - 3D效果")
-        
+        self.font = load_font(18)
+
     def draw_board(self):
         """绘制棋盘"""
         # 绘制棋盘背景
@@ -77,21 +100,25 @@ class GobangGame:
         pos_x = MARGIN + x * CELL_SIZE
         pos_y = MARGIN + y * CELL_SIZE
         
-        # 绘制棋子主体
-        pygame.draw.circle(self.screen, color, (pos_x, pos_y), CELL_SIZE // 2 - 2)
-        
-        # 绘制阴影（制造3D效果）
+        radius = CELL_SIZE // 2 - 2
+
+        # 先绘制半透明阴影（pygame.draw 直接画到屏幕会忽略 alpha，
+        # 所以画在带 SRCALPHA 的临时 Surface 上），再画棋子，避免阴影盖住棋子
         shadow_offset = 3
-        shadow_color = (max(0, color[0] - 50), max(0, color[1] - 50), max(0, color[2] - 50))
-        for i in range(1, 4):
-            alpha = 50 - i * 10  # 透明度
-            s_color = (*shadow_color, alpha)
-            s_pos = (pos_x + shadow_offset, pos_y + shadow_offset)
-            pygame.draw.circle(self.screen, s_color, s_pos, CELL_SIZE // 2 - 2)
-        
+        size = (radius + 2) * 2
+        shadow = pygame.Surface((size, size), pygame.SRCALPHA)
+        pygame.draw.circle(shadow, (0, 0, 0, 90), (size // 2, size // 2), radius)
+        self.screen.blit(shadow, (pos_x - size // 2 + shadow_offset, pos_y - size // 2 + shadow_offset))
+
+        # 绘制棋子主体
+        pygame.draw.circle(self.screen, color, (pos_x, pos_y), radius)
+        if color == WHITE:
+            pygame.draw.circle(self.screen, (170, 170, 170), (pos_x, pos_y), radius, 1)
+
         # 绘制高光（制造3D效果）
-        highlight_pos = (pos_x - 3, pos_y - 3)
-        pygame.draw.circle(self.screen, HIGHLIGHT_COLOR, highlight_pos, CELL_SIZE // 4, 1)
+        highlight_pos = (pos_x - 4, pos_y - 4)
+        highlight_color = (110, 110, 110) if color == BLACK else (235, 235, 235)
+        pygame.draw.circle(self.screen, highlight_color, highlight_pos, CELL_SIZE // 6)
     
     def draw_pieces(self):
         """绘制棋子"""
@@ -162,7 +189,14 @@ class GobangGame:
         if self.check_win(x, y):
             self.game_over = True
             self.winner = self.current_player
-            
+            return True
+
+        # 棋盘下满且无人获胜：平局
+        if all(cell != 0 for row in self.board for cell in row):
+            self.game_over = True
+            self.winner = 0
+            return True
+
         self.current_player = 3 - self.current_player  # 切换玩家 (1->2, 2->1)
         return True
     
@@ -187,10 +221,13 @@ class GobangGame:
     
     def draw_status(self):
         """绘制游戏状态"""
-        font = pygame.font.SysFont('arial', 16)
-        
+        font = self.font
+
         if self.game_over:
-            winner_text = "黑棋获胜!" if self.winner == 1 else "白棋获胜!"
+            if self.winner == 0:
+                winner_text = "平局!"
+            else:
+                winner_text = "黑棋获胜!" if self.winner == 1 else "白棋获胜!"
             text = font.render(winner_text, True, (255, 0, 0))
         else:
             player_text = "黑棋回合" if self.current_player == 1 else "白棋回合"
