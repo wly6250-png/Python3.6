@@ -23,10 +23,10 @@ def triangles1():
     L1=[1] # ①
     while True:
         yield L1
+        pre=L1[:]  # 先保存上一行，再原地更新L1
         for i in range(1,len(L1)):
             L1[i]=pre[i]+pre[i-1]
         L1.append(1)
-        pre=L1[:]
         # ②range(1,1)=[],for循环并不执行，单纯追加一个元素1,L1=[1,1]
         # ③range(1,2)=[1],i=1,L1=[1,2]⇒[1,2,1]
         # ④range(1,3)=[1,2],
